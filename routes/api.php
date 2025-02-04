@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:user')->group(function () {
     Route::prefix('/user')->name('profile.')->group(function() {
     Route::get('/', [AuthController::class, 'user'])->name('user');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 });
 });
 
