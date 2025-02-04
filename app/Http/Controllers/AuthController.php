@@ -6,6 +6,7 @@ use Illuminate\Auth\AuthenticationException;
 use App\Http\Requests\User\LoginRequest;
 use App\Http\Requests\User\RegisterRequest;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +18,7 @@ class AuthController extends Controller
         
         $user_id = Auth::id(); 
         $users = User::where('id', $user_id)
-        ->select('id','name','email','password','image','created_at','updated_at')
+        ->select('id','name','email','password','created_at','updated_at')
         ->get();    
 
         return response()->json($users);
@@ -61,7 +62,17 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'ユーザ登録が完了しました。',
         ]);
-        
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::guard('user')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json([
+            'message' => 'ログアウトしました。',
+        ]);
     }
 
 }
