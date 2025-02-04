@@ -41,4 +41,14 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function guest(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'ゲスト',
+            'email' => 'welcome@guest.com',
+            'email_verified_at' => now(),
+            'password' => Hash::make('Naito0103'),
+        ]);
+    }
 }
