@@ -45,3 +45,32 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+
+  minio:
+    image: minio/minio:latest
+    container_name: confess-api-server-minio
+    platform: linux/arm64/v8
+    ports:
+      - "9001:9001"
+      - "9002:9002"
+    environment:
+      MINIO_ROOT_USER: access_key
+      MINIO_ROOT_PASSWORD: secret_key
+    command: server /export --address :9001 --console-address :9002
+
+  create-bucket:
+    container_name: confess-api-server-create-bucket
+    image: minio/mc
+    entrypoint: [""]
+    command:
+      - /bin/sh
+      - -c
+      - |
+        until (mc config host add minio http://minio:9001 access_key secret_key) do echo 'wait until add host' && sleep 1; done;
+        mc mb minio/confess-bucket
+        mc policy set confess-bucket minio/confess-bucket
+    environment:
+      MINIO_ROOT_USER: access_key
+      MINIO_ROOT_PASSWORD: secret_key
+    depends_on:
+      - minio
