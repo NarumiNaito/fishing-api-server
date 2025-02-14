@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Auth\AuthenticationException;
 use App\Http\Requests\User\LoginRequest;
 use App\Http\Requests\User\RegisterRequest;
+use App\Http\Requests\User\UpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -29,14 +31,14 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
 
         if (!Auth::guard('user')->attempt($credentials)) {
-            throw new AuthenticationException('ログインに失敗しました。');
+            throw new AuthenticationException('ログインに失敗しました。入力内容を確認して下さい。');
         }
 
         $request->session()->regenerate();
 
         return response()->json([
             'message' => 'ログインしました。'
-        ]);
+        ])->cookie('user_session', "user_session", 120);
     }
 
     public function register(RegisterRequest $request)
@@ -47,7 +49,7 @@ class AuthController extends Controller
         if ($existsEmail) {
             return response()->json([
                 'message' => 'メールアドレスがすでに登録されています。'
-            ],410
+            ]
         );
         }
 
@@ -61,6 +63,25 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'ユーザ登録が完了しました。',
+        ])->cookie('user_session', "user_session", 120);
+    }
+
+    public function update(UpdateRequest $request)
+    {
+        $profile = User::find($request->id);
+
+        if (is_null($profile)) {
+            return response()->json([
+                'message' => '更新対象のプロフィールが存在しません。'
+            ]);
+        }
+
+        $profile->update([
+            'name' => $request->name,
+        ]);
+
+        return response()->json([
+            'message' => 'プロフィール情報を更新しました。'
         ]);
     }
 
@@ -69,6 +90,8 @@ class AuthController extends Controller
         Auth::guard('user')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        Cookie::queue(Cookie::forget('user_session'));
 
         return response()->json([
             'message' => 'ログアウトしました。',
