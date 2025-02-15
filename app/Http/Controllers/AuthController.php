@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -20,7 +22,7 @@ class AuthController extends Controller
         
         $user_id = Auth::id(); 
         $users = User::where('id', $user_id)
-        ->select('id','name','email','password','created_at','updated_at')
+        ->select('id','name','email','image','password','created_at','updated_at')
         ->get();    
 
         return response()->json($users);
@@ -67,23 +69,47 @@ class AuthController extends Controller
     }
 
     public function update(UpdateRequest $request)
-    {
-        $profile = User::find($request->id);
-
-        if (is_null($profile)) {
+        {
+            $profile = User::find($request->id);
+    
+            if (is_null($profile)) {
+                return response()->json([
+                    'message' => '更新対象のプロフィールが存在しません。'
+                ]);
+            }
+    
+            $oldImage = $profile->image;
+    
+            if (is_null($request->image)) {
+                $profile->update([
+                    'name' => $request->name,
+                    'image' => null,
+                ]);
+    
+                $oldImage && Storage::disk('s3')->delete($oldImage);
+        
+                return response()->json([
+                    'message' => 'プロフィール情報を更新しました。'
+                ]);
+            }
+    
+            $extension = $request->image->extension();
+            $fileName = Str::uuid().'.'.$extension;
+    
+            $uploadedFilePath = Storage::disk('s3')->putFile('images', $request->image, $fileName);
+    
+            $profile->update([
+                'name' => $request->name,
+                'image' => $uploadedFilePath,
+            ]);
+    
+            $oldImage && Storage::disk('s3')->delete($oldImage);
+    
             return response()->json([
-                'message' => '更新対象のプロフィールが存在しません。'
+                'message' => 'プロフィール情報を更新しました。'
             ]);
         }
-
-        $profile->update([
-            'name' => $request->name,
-        ]);
-
-        return response()->json([
-            'message' => 'プロフィール情報を更新しました。'
-        ]);
-    }
+    
 
     public function logout(Request $request)
     {

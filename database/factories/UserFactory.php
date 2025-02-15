@@ -28,6 +28,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'image' => null,
             'remember_token' => Str::random(10),
         ];
     }
@@ -49,6 +50,7 @@ class UserFactory extends Factory
             'email' => 'welcome@guest.com',
             'email_verified_at' => now(),
             'password' => Hash::make('Naito0103'),
+            'image' => null,
         ]);
     }
 }
