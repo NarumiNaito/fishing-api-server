@@ -23,8 +23,14 @@ class AuthController extends Controller
         $user_id = Auth::id(); 
         $users = User::where('id', $user_id)
         ->select('id','name','email','image','password','created_at','updated_at')
-        ->get();    
+        ->get();   
 
+        $users->each(function ($user) {
+            if ($user->image) {
+                $user->image = Storage::disk('s3')->url($user->image);
+            }
+            });
+            
         return response()->json($users);
     }
 
@@ -69,47 +75,47 @@ class AuthController extends Controller
     }
 
     public function update(UpdateRequest $request)
-        {
-            $profile = User::find($request->id);
-    
-            if (is_null($profile)) {
-                return response()->json([
-                    'message' => '更新対象のプロフィールが存在しません。'
-                ]);
-            }
-    
-            $oldImage = $profile->image;
-    
-            if (is_null($request->image)) {
-                $profile->update([
-                    'name' => $request->name,
-                    'image' => null,
-                ]);
-    
-                $oldImage && Storage::disk('s3')->delete($oldImage);
-        
-                return response()->json([
-                    'message' => 'プロフィール情報を更新しました。'
-                ]);
-            }
-    
-            $extension = $request->image->extension();
-            $fileName = Str::uuid().'.'.$extension;
-    
-            $uploadedFilePath = Storage::disk('s3')->putFile('images', $request->image, $fileName);
-    
+    {
+        $profile = User::find($request->id);
+
+        if (is_null($profile)) {
+            return response()->json([
+                'message' => '更新対象のプロフィールが存在しません。'
+            ]);
+        }
+
+        $oldImage = $profile->image;
+
+        if (is_null($request->image)) {
             $profile->update([
                 'name' => $request->name,
-                'image' => $uploadedFilePath,
+                'image' => null,
             ]);
-    
+
             $oldImage && Storage::disk('s3')->delete($oldImage);
     
             return response()->json([
                 'message' => 'プロフィール情報を更新しました。'
             ]);
         }
-    
+
+        $extension = $request->image->extension();
+        $fileName = Str::uuid().'.'.$extension;
+
+        $uploadedFilePath = Storage::disk('s3')->putFile('images', $request->image, $fileName);
+
+        $profile->update([
+            'name' => $request->name,
+            'image' => $uploadedFilePath,
+        ]);
+
+        $oldImage && Storage::disk('s3')->delete($oldImage);
+
+        return response()->json([
+            'message' => 'プロフィール情報を更新しました。'
+        ]);
+    }
+
 
     public function logout(Request $request)
     {
