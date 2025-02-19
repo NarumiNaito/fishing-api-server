@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         $users->each(function ($user) {
             if ($user->image) {
-                $user->image = Storage::disk('s3')->url($user->image);
+                $user->image = Storage::disk('s3')->url(config('filesystems.disks.s3.bucket').'/'.$user->image);
             }
             });
             
