@@ -123,7 +123,9 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        Cookie::queue(Cookie::forget('user_session'));
+        Cookie::queue(Cookie::forget('XSRF-TOKEN'));
+        Cookie::queue(Cookie::forget('laravel_session'));
+        Cookie::queue(Cookie::forget('user_session'));   
 
         return response()->json([
             'message' => 'ログアウトしました。',
