@@ -56,6 +56,11 @@ services:
       MINIO_ROOT_USER: access_key
       MINIO_ROOT_PASSWORD: secret_key
     command: server /export --address :9001 --console-address :9002
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/ready"]
+      interval: 5s
+      timeout: 2s
+      retries: 5
 
   create-bucket:
     container_name: fishing-api-server-create-bucket
@@ -67,9 +72,10 @@ services:
       - |
         until (mc config host add minio http://minio:9001 access_key secret_key) do echo 'wait until add host' && sleep 1; done;
         mc mb minio/fishing-bucket
-        mc policy set fishing-bucket minio/fishing-bucket
+        mc policy set public minio/fishing-bucket;
     environment:
       MINIO_ROOT_USER: access_key
       MINIO_ROOT_PASSWORD: secret_key
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy

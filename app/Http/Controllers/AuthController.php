@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
 
-    public function User()
+    public function user()
     {
         
         $user_id = Auth::id(); 
