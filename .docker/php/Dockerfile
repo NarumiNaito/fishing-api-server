@@ -16,12 +16,12 @@ RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -
 RUN apt install -y nodejs
 RUN npm install --global yarn
 
-# COPY .docker/php/php.ini /usr/local/etc/php/php.ini
-# COPY . /app
+COPY .docker/php/php.ini /usr/local/etc/php/php.ini
+COPY . /app
 
 WORKDIR /app
 
-# RUN chmod -R a+w /app/storage /app/bootstrap/cache
+RUN chmod -R a+w /app/storage /app/bootstrap/cache
 
-# EXPOSE 9000
-# CMD ["php-fpm"]
+EXPOSE 9000
+CMD ["php-fpm"]
